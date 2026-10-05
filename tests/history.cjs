@@ -1,0 +1,11 @@
+const {setup,root}=require('./layers.cjs');const fs=require('fs'),assert=require('assert/strict');
+const h=setup(fs.readFileSync(root+'/index.html','utf8'),true);
+h.run("addMask();layerValue('width',7424);layerValue('height',205);commitHistory();deleteLayer();commitHistory();undoDocument();");
+assert.equal(h.run('activeLayer().width'),7424);assert.equal(h.run('activeLayer().height'),205);h.run('redoDocument()');assert.equal(h.run('overlays.length'),0);
+h.run('undoDocument();layerValue("width",300);commitHistory();redoDocument();');assert.equal(h.run('activeLayer().width'),300);assert.equal(h.run('historyIndex'),h.run('history.length-1'));
+h.run("addScreen();commitHistory();removeScreen(0);commitHistory();undoDocument();");assert.equal(h.run('screens.length'),2);h.run('redoDocument()');assert.equal(h.run('screens.length'),1);
+h.run("appMode='custom';cAdd();commitHistory();cSetRes(400,200);commitHistory();cRemove(1);commitHistory();undoDocument();");assert.equal(h.run('customScreens[1].resW'),400);
+h.run("undoDocument();");assert.equal(h.run('customScreens[1].resW'),1920);
+h.run("appMode='led';layerAssets.set('photo',{data:'data:image/png;base64,test',img:{tag:'photo'}});overlays.push({id:'photo',mode:'led',type:'image',name:'Photo',unit:'px',width:20,height:10,x:0,y:0,opacity:35,visible:true});selectedLayer='photo';commitHistory();deleteLayer();commitHistory();undoDocument();");assert.equal(h.run("layerAssets.get(activeLayer().id).img.tag"),'photo');assert.equal(h.run('activeLayer().opacity'),35);
+h.run("for(let i=0;i<100;i++){pixelMapName='Revision '+i;commitHistory();}");assert.equal(h.run('history.length'),80);assert.equal(h.run('historyIndex'),79);
+console.log('PASS: screen and mask deletion recovery, image asset recovery, LED/custom edits, redo, branched edits invalidate redo, bounded history.');
