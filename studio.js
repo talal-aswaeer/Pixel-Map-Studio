@@ -27,8 +27,8 @@ function hatchSpacing(l,density=cardBounds().density) {
   if(!Number.isInteger(l.hatchCount))return l.spacing;
   const p=layerPixels(l,density);return (p.width+p.height)/(l.hatchCount+1);
 }
-function snappedMaskPosition(l,x,y,density=cardBounds().density,bypass=false) {
-  if(l.type==='mask'&&l.mode==='led'&&l.snapToGrid!==false&&!bypass) {
+function snappedLayerPosition(l,x,y,density=cardBounds().density,bypass=false) {
+  if(l.mode==='led'&&l.snapToGrid!==false&&!bypass) {
     const step=density*.5;return {x:Math.round(x/step)*step,y:Math.round(y/step)*step};
   }
   return {x:Math.round(x),y:Math.round(y)};
@@ -62,7 +62,7 @@ async function uploadOverlay(file) {
   try {
     const {data,img}=await readImageFile(file);
     const id=uid(),assetId='image-'+crypto.randomUUID();layerAssets.set(assetId,{data,img});
-    overlays.push({id,assetId,mode,type:'image',name:file.name,x:0,y:0,width:img.naturalWidth,height:img.naturalHeight,unit:'px',opacity:100,visible:true});
+    overlays.push({id,assetId,mode,type:'image',name:file.name,x:0,y:0,width:img.naturalWidth,height:img.naturalHeight,unit:'px',opacity:100,visible:true,snapToGrid:true});
     selectedLayer=id;setEditor('layers');showToast('Image added as a layer');
   } catch(error) { showToast(error.message); }
 }
@@ -106,7 +106,8 @@ function renderLayerPanel() {
     const p=layerPixels(l);
     const field=(label,key,value,step='any')=>`<div class="form-group"><label for="layer-${key}">${label}</label><input id="layer-${key}" type="number" step="${step}" ${key==='hatchCount'?'min="0" max="2000"':['width','height','spacing','lineWidth'].includes(key)?'min="0.001"':''} value="${Number(value.toFixed(4))}" oninput="layerValue('${key}',this.value)" onchange="renderLayerPanel()"></div>`;
     html+=`<section class="control-card"><div class="section-title">${l.type==='mask'?'Mask':'Image'} settings</div><div class="form-group"><label for="layer-name">Layer name</label><input id="layer-name" value="${esc(l.name)}" oninput="layerValue('name',this.value)" onchange="renderLayerPanel()"></div><div class="form-row">${field('X position (px)','x',l.x)}${field('Y position (px)','y',l.y)}</div><div class="form-group"><label for="layer-unit">Size unit</label><select id="layer-unit" onchange="layerUnit(this.value)"><option value="px" ${l.unit==='px'?'selected':''}>Pixels (px)</option>${appMode==='led'?`<option value="cm" ${l.unit==='cm'?'selected':''}>Centimetres (cm)</option><option value="m" ${l.unit==='m'?'selected':''}>Metres (m)</option>`:''}</select></div><div class="form-row">${field('Width ('+l.unit+')','width',l.width)}${field('Height ('+l.unit+')','height',l.height)}</div><div class="muted-note" id="layerPixelSize">${formatLayerNumber(p.width)} × ${formatLayerNumber(p.height)} px in export</div><div class="layer-actions"><button onclick="fitLayerWidth()">Fit card width</button><button onclick="bottomLayer()">Align bottom</button></div><div class="form-group"><label for="layer-opacity">Layer opacity <span class="opacity-value" id="opacityValue">${l.opacity}%</span></label><input id="layer-opacity" type="range" min="0" max="100" value="${l.opacity}" oninput="layerValue('opacity',this.value)"></div>`;
-    if(l.type==='mask')html+=`${appMode==='led'?`<div class="cb"><input id="layer-snapToGrid" type="checkbox" ${l.snapToGrid!==false?'checked':''} onchange="layerValue('snapToGrid',this.checked)"><label for="layer-snapToGrid">Snap movement to 0.5 m</label></div><p class="muted-note">Hold Shift while dragging to move freely. Enter exact positions above when needed.</p>`:''}<div class="form-group"><label for="layer-fillOpacity">Red fill <span class="opacity-value" id="fillOpacityValue">${l.fillOpacity}%</span></label><input id="layer-fillOpacity" type="range" min="0" max="100" value="${l.fillOpacity}" oninput="layerValue('fillOpacity',this.value)"></div><div class="form-row">${field('Number of hatch lines','hatchCount',hatchLineCount(l),'1')}${field('Stroke width (px)','lineWidth',l.lineWidth)}</div>`;
+    html+=`${appMode==='led'?`<div class="cb"><input id="layer-snapToGrid" type="checkbox" ${l.snapToGrid!==false?'checked':''} onchange="layerValue('snapToGrid',this.checked)"><label for="layer-snapToGrid">Snap movement to 0.5 m</label></div><p class="muted-note">Hold Shift while dragging to move freely. Enter exact positions above when needed.</p>`:''}`;
+    if(l.type==='mask')html+=`<div class="form-group"><label for="layer-fillOpacity">Red fill <span class="opacity-value" id="fillOpacityValue">${l.fillOpacity}%</span></label><input id="layer-fillOpacity" type="range" min="0" max="100" value="${l.fillOpacity}" oninput="layerValue('fillOpacity',this.value)"></div><div class="form-row">${field('Number of hatch lines','hatchCount',hatchLineCount(l),'1')}${field('Stroke width (px)','lineWidth',l.lineWidth)}</div>`;
     const i=group.indexOf(l);
     html+=`<div class="layer-actions"><button onclick="reorderLayer(1)" ${i===group.length-1?'disabled':''}>Move up</button><button onclick="reorderLayer(-1)" ${i===0?'disabled':''}>Move down</button><button class="delete-layer" onclick="deleteLayer()">Delete layer</button></div><p class="muted-note">Drag the selected layer in the preview, or enter its position above. Anything outside the test card is clipped in the export.${appMode==='custom'?' Physical units are available in LED wall mode.':''}</p></section>`;
   }
@@ -170,7 +171,7 @@ canvas.addEventListener('pointermove',event=>{
   if(!layerDrag)return;
   event.preventDefault();event.stopImmediatePropagation();
   if(layerDrag.pan){panX=layerDrag.panX+event.clientX-layerDrag.x;panY=layerDrag.panY+event.clientY-layerDrag.y;}
-  else {const l=overlays.find(l=>l.id===layerDrag.id),rect=canvas.getBoundingClientRect(),world=canvasToM(event.clientX-rect.left,event.clientY-rect.top),b=cardBounds();const position=snappedMaskPosition(l,(world.x-b.minX)*b.density-layerDrag.dx,(world.y-b.minY)*b.density-layerDrag.dy,b.density,event.shiftKey);l.x=position.x;l.y=position.y;}
+  else {const l=overlays.find(l=>l.id===layerDrag.id),rect=canvas.getBoundingClientRect(),world=canvasToM(event.clientX-rect.left,event.clientY-rect.top),b=cardBounds();const position=snappedLayerPosition(l,(world.x-b.minX)*b.density-layerDrag.dx,(world.y-b.minY)*b.density-layerDrag.dy,b.density,event.shiftKey);l.x=position.x;l.y=position.y;}
   redraw();
 },true);
 function finishLayerDrag(event){if(!layerDrag)return;layerDrag=null;if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);renderLayerPanel();}
@@ -364,7 +365,8 @@ function validateProject(project) {
     for(const k of ['x','y'])l[k]=checkedNumber(raw[k],k,-1e7,1e7);
     for(const k of ['width','height'])l[k]=checkedNumber(raw[k],k,.000001,1e7);
     l.opacity=checkedNumber(raw.opacity,'opacity',0,100);
-    if(l.type==='mask'){l.color=checkedColor(raw.color);l.fillOpacity=checkedNumber(raw.fillOpacity,'fill opacity',0,100);l.spacing=checkedNumber(raw.spacing,'hatch spacing',1,100000);l.lineWidth=checkedNumber(raw.lineWidth,'stroke width',.001,100000);l.snapToGrid=Object.hasOwn(raw,'snapToGrid')?checkedBool(raw.snapToGrid,'mask grid snap'):true;if(Object.hasOwn(raw,'hatchCount'))l.hatchCount=checkedNumber(raw.hatchCount,'hatch line count',0,2000,true);}
+    l.snapToGrid=Object.hasOwn(raw,'snapToGrid')?checkedBool(raw.snapToGrid,'layer grid snap'):true;
+    if(l.type==='mask'){l.color=checkedColor(raw.color);l.fillOpacity=checkedNumber(raw.fillOpacity,'fill opacity',0,100);l.spacing=checkedNumber(raw.spacing,'hatch spacing',1,100000);l.lineWidth=checkedNumber(raw.lineWidth,'stroke width',.001,100000);if(Object.hasOwn(raw,'hatchCount'))l.hatchCount=checkedNumber(raw.hatchCount,'hatch line count',0,2000,true);}
     else l.asset=assetRef(raw.asset,true);
     return l;
   });
