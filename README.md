@@ -28,6 +28,6 @@ Keep the `.tcmap` file to preserve your work: refreshing or closing the page doe
 
 ## Local verification
 
-Run `node tests/layers.cjs`, `node tests/history.cjs`, `node tests/projects.cjs`, and `node tests/mask-controls.cjs`. They verify original screen rendering and layer-free exports, overlay geometry and opacity in both modes, literal centimetre sizes, deletion recovery, redo, file round trips, embedded assets, and invalid-file handling.
+Run `node tests/labels.cjs`, `node tests/layers.cjs`, `node tests/history.cjs`, `node tests/projects.cjs`, and `node tests/mask-controls.cjs`. They verify original screen rendering and layer-free exports, overlay geometry and opacity in both modes, literal centimetre sizes, deletion recovery, redo, file round trips, embedded assets, and invalid-file handling.
 
 Run `node tests/create-example.cjs` to create the `outputs/stage-example.tcmap` example mirrors the supplied three-screen layout: C 4096 × 1408, A 7424 × 1408, B 4096 × 1408, with a 7424 × 205 mask at X 4096 / Y 1203. Browser-generated `.tcmap`, PNG, and SVG files were saved and checked locally; the PNG and SVG dimensions are 15616 × 1408.

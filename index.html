@@ -467,7 +467,7 @@ function bind(){
   on('iBW','input',e=>{s.borderWidth=parseInt(e.target.value);document.getElementById('iBWV').textContent=e.target.value+'px';drawAll();});
 
   on('iLabel','change',e=>{s.labelMode=e.target.value;if(e.target.value==='custom')s.screenLabel='A';renderPanel();drawAll();});
-  on('iLabelTxt','input',e=>{s.screenLabel=e.target.value||'A';drawAll();});
+  on('iLabelTxt','input',e=>{s.screenLabel=e.target.value;drawAll();});
   on('iBrand','input',e=>{s.brandName=e.target.value;drawAll();});
 
   on('iLS','input',e=>{s.logoScale=parseInt(e.target.value);document.getElementById('iLSV').textContent=e.target.value+'%';drawAll();});
@@ -602,7 +602,7 @@ function drawScreen(s,idx){
     const ls=Math.min(w,h)*.06;
     ctx.font=`600 ${ls}px Arial,sans-serif`;
     ctx.fillStyle=s.accentColor;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(`SCREEN ${label}`,cx,cy-Math.min(w,h)*.12);
+    ctx.fillText(`${s.labelMode==='custom'?'':'SCREEN '}${label}`,cx,cy-Math.min(w,h)*.12);
   }
 
   const rts=Math.min(w,h)*.10;
@@ -991,7 +991,7 @@ function drawScreenExport(ctx,s,idx,ox,oy,w,h){
   }
 
   const label=getLabel(s,idx),cx=ox+w/2,cy=oy+h/2;
-  if(label){const ls=Math.min(w,h)*.06;ctx.font=`600 ${ls}px Arial,sans-serif`;ctx.fillStyle=s.accentColor;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`SCREEN ${label}`,cx,cy-Math.min(w,h)*.12);}
+  if(label){const ls=Math.min(w,h)*.06;ctx.font=`600 ${ls}px Arial,sans-serif`;ctx.fillStyle=s.accentColor;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`${s.labelMode==='custom'?'':'SCREEN '}${label}`,cx,cy-Math.min(w,h)*.12);}
 
   const rts=Math.min(w,h)*.10;ctx.font=`600 ${rts}px Arial,sans-serif`;ctx.fillStyle=hx(s.resTextColor,s.resTextOpacity/100);ctx.textAlign='center';ctx.textBaseline='middle';
   const rt=`${resW} × ${resH}`;const ty=cy;ctx.fillText(rt,cx,ty);
@@ -1053,7 +1053,7 @@ function buildScreenSVG(s,idx,ox,oy,w,h){
 
   const cx=ox+w/2,cy=oy+h/2,rts=Math.min(w,h)*.10,lo=0;
   const rOp=(s.resTextOpacity/100).toFixed(2), dOp=(s.dimTextOpacity/100).toFixed(2);
-  if(label){const ls=Math.min(w,h)*.06;o+=`<text x="${cx}" y="${cy-Math.min(w,h)*.12}" dominant-baseline="central" text-anchor="middle" font-family="Arial,sans-serif" font-weight="600" font-size="${ls}" fill="${s.accentColor}">SCREEN ${esc(label)}</text>`;}
+  if(label){const ls=Math.min(w,h)*.06;o+=`<text x="${cx}" y="${cy-Math.min(w,h)*.12}" dominant-baseline="central" text-anchor="middle" font-family="Arial,sans-serif" font-weight="600" font-size="${ls}" fill="${s.accentColor}">${s.labelMode==='custom'?'':'SCREEN '}${esc(label)}</text>`;}
   o+=`<text x="${cx}" y="${cy+lo}" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-weight="600" font-size="${rts}" fill="${s.resTextColor}" fill-opacity="${rOp}">${resW} × ${resH}<tspan font-family="Consolas,monospace" font-size="${rts*.35}" fill-opacity="${(rOp*.6).toFixed(2)}">px</tspan></text>`;
   const ds=Math.min(w,h)*.035;
   o+=`<text x="${cx}" y="${cy+lo+rts*.7}" text-anchor="middle" font-family="Arial,sans-serif" font-size="${ds}" fill="${s.dimTextColor}" fill-opacity="${dOp}">${s.widthM} × ${s.heightM}<tspan font-size="${ds*.8}" fill-opacity="${(dOp*.7).toFixed(2)}">m</tspan></text>`;
@@ -1412,7 +1412,7 @@ function cBind(){
   on('cResH','input',e=>{cValidateRes(e.target,'h');});
 
   on('cLabel','change',e=>{s.labelMode=e.target.value;if(e.target.value==='custom')s.screenLabel='A';renderCustomPanel();drawCustomAll();});
-  on('cLabelTxt','input',e=>{s.screenLabel=e.target.value||'A';drawCustomAll();});
+  on('cLabelTxt','input',e=>{s.screenLabel=e.target.value;drawCustomAll();});
   on('cGrid','change',e=>{s.showGrid=e.target.checked;renderCustomPanel();drawCustomAll();});
   on('cBorder','change',e=>{s.showBorder=e.target.checked;renderCustomPanel();drawCustomAll();});
   on('cBW','input',e=>{s.borderWidth=parseInt(e.target.value);document.getElementById('cBWV').textContent=e.target.value+'px';drawCustomAll();});
@@ -1573,7 +1573,7 @@ function drawCustomScreen(s,idx){
   if(label){
     const ls=Math.min(w,h)*.06;
     ctx.font=`600 ${ls}px Arial,sans-serif`;ctx.fillStyle=s.accentColor;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(`SCREEN ${label}`,cx,cy-Math.min(w,h)*.12);
+    ctx.fillText(`${s.labelMode==='custom'?'':'SCREEN '}${label}`,cx,cy-Math.min(w,h)*.12);
   }
 
   // Resolution text with custom color & opacity
@@ -1715,7 +1715,7 @@ function drawCustomScreenExport(ctx,s,idx,ox,oy,w,h){
   }
 
   const label=getLabel(s,idx),cx=ox+w/2,cy=oy+h/2;
-  if(label){const ls=Math.min(w,h)*.06;ctx.font=`600 ${ls}px Arial,sans-serif`;ctx.fillStyle=s.accentColor;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`SCREEN ${label}`,cx,cy-Math.min(w,h)*.12);}
+  if(label){const ls=Math.min(w,h)*.06;ctx.font=`600 ${ls}px Arial,sans-serif`;ctx.fillStyle=s.accentColor;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`${s.labelMode==='custom'?'':'SCREEN '}${label}`,cx,cy-Math.min(w,h)*.12);}
   const rts=Math.min(w,h)*.10;ctx.font=`600 ${rts}px Arial,sans-serif`;
   ctx.fillStyle=hx(s.resTextColor,s.resTextOpacity/100);
   ctx.textAlign='center';ctx.textBaseline='middle';
@@ -1765,7 +1765,7 @@ function buildCustomSVGScreen(s,idx,ox,oy,w,h){
   const cx=ox+w/2,cy=oy+h/2,rts=Math.min(w,h)*.10,lo=0;
   const rOp=(s.resTextOpacity/100).toFixed(2);
   const dOp=(s.dimTextOpacity/100).toFixed(2);
-  if(label){const ls=Math.min(w,h)*.06;o+=`<text x="${cx}" y="${cy-Math.min(w,h)*.12}" dominant-baseline="central" text-anchor="middle" font-family="Arial,sans-serif" font-weight="600" font-size="${ls}" fill="${s.accentColor}">SCREEN ${esc(label)}</text>`;}
+  if(label){const ls=Math.min(w,h)*.06;o+=`<text x="${cx}" y="${cy-Math.min(w,h)*.12}" dominant-baseline="central" text-anchor="middle" font-family="Arial,sans-serif" font-weight="600" font-size="${ls}" fill="${s.accentColor}">${s.labelMode==='custom'?'':'SCREEN '}${esc(label)}</text>`;}
   o+=`<text x="${cx}" y="${cy+lo}" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-weight="600" font-size="${rts}" fill="${s.resTextColor}" fill-opacity="${rOp}">${resW} × ${resH}<tspan font-family="Consolas,monospace" font-size="${rts*.35}" fill-opacity="${(rOp*.6).toFixed(2)}">px</tspan></text>`;
 
   const showText=s.brandMode==='text'||s.brandMode==='both',showLogo=(s.brandMode==='logo'||s.brandMode==='both')&&s.logoDataURL;
@@ -1857,7 +1857,7 @@ function updateWorkspaceReadout(){
   const active=appMode==='led'?S():cActive();
   const label=getLabel(active,appMode==='led'?activeIdx:customActiveIdx);
   const res=appMode==='led'?gRes(active):{resW:active.resW,resH:active.resH};
-  document.getElementById('workspaceTitle').textContent=(label?'Screen '+label:'Selected screen')+' · '+res.resW+' × '+res.resH+' px';
+  document.getElementById('workspaceTitle').textContent=(label?(active.labelMode==='custom'?label:'Screen '+label):'Selected screen')+' · '+res.resW+' × '+res.resH+' px';
 }
 
 

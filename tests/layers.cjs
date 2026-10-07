@@ -15,7 +15,7 @@ function setup(html,studio=false){
 }
 const baseline=setup(fs.readFileSync(__dirname+'/baseline.html','utf8'));
 const studio=setup(fs.readFileSync(root+'/index.html','utf8'),true);
-for(const fn of ['gRes','sDimsM','getScreenBBox','edgeSnap','drawScreen','drawCustomScreen','drawScreenExport','drawCustomScreenExport','buildScreenSVG','buildCustomSVGScreen'])assert.equal(baseline.run(fn+'.toString()'),studio.run(fn+'.toString()'),fn+' changed');
+for(const fn of ['gRes','sDimsM','getScreenBBox','edgeSnap','drawScreen','drawCustomScreen','drawScreenExport','drawCustomScreenExport','buildScreenSVG','buildCustomSVGScreen']){const original=baseline.run(fn+'.toString()').replaceAll('ctx.fillText(`SCREEN ${label}`',"ctx.fillText(`${s.labelMode==='custom'?'':'SCREEN '}${label}`").replaceAll('>SCREEN ${esc(label)}</text>',">${s.labelMode==='custom'?'':'SCREEN '}${esc(label)}</text>");assert.equal(original,studio.run(fn+'.toString()'),fn+' changed beyond the custom-label correction');}
 for(const mode of ['led','custom']){
  const configure=`appMode='${mode}';${mode==='led'?'screens=[mkScreen(0),mkScreen(1)];screens[0].widthM=4;screens[1].widthM=2;screens[1].posX=4;':'customScreens=[mkCustomScreen(0),mkCustomScreen(1)];customScreens[0].resW=800;customScreens[1].resW=400;customScreens[1].posX=20;'};curList().forEach(s=>{s.brandMode='none';});`;
  baseline.run(configure);studio.run(configure);
